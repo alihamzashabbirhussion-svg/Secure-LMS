@@ -1,0 +1,1821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureLMS | ALI HAMZA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #22c55e;
+            --accent2: #16a34a;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --surface: #1e293b;
+            --surface2: #334155;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --card-bg: rgba(30,41,59,0.95);
+            --glow: 0 0 30px rgba(34,197,94,0.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--primary);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        #bgCanvas {
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            background: linear-gradient(135deg, #020810 0%, #0a0f1e 50%, #020d08 100%);
+        }
+
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.18;
+            z-index: -1;
+            animation: orbFloat linear infinite;
+            pointer-events: none;
+        }
+        .orb1 { width: 500px; height: 500px; background: #22c55e; top: -150px; left: -150px; animation-duration: 18s; }
+        .orb2 { width: 400px; height: 400px; background: #0ea5e9; bottom: -100px; right: -100px; animation-duration: 22s; animation-delay: -8s; }
+        .orb3 { width: 300px; height: 300px; background: #a855f7; top: 40%; left: 60%; animation-duration: 15s; animation-delay: -4s; }
+
+        @keyframes orbFloat {
+            0%   { transform: translate(0,0) scale(1); }
+            25%  { transform: translate(40px,-30px) scale(1.05); }
+            50%  { transform: translate(20px,40px) scale(0.95); }
+            75%  { transform: translate(-30px,20px) scale(1.08); }
+            100% { transform: translate(0,0) scale(1); }
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(34,197,94,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(34,197,94,0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+            animation: gridPulse 4s ease-in-out infinite;
+        }
+        @keyframes gridPulse {
+            0%, 100% { opacity: 0.5; }
+            50%       { opacity: 1; }
+        }
+
+        /* ── SESSION TIMER BAR ── */
+        .session-bar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: var(--surface);
+            z-index: 9999;
+        }
+        .session-bar-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--warning), var(--danger));
+            transition: width 1s linear, background 0.5s;
+        }
+
+        /* ── SESSION WARNING ── */
+        .session-warning {
+            position: fixed;
+            bottom: 24px; right: 24px;
+            background: var(--surface);
+            border: 1px solid var(--warning);
+            border-left: 4px solid var(--warning);
+            color: var(--text);
+            padding: 1rem 1.2rem;
+            border-radius: 12px;
+            font-size: 0.82rem;
+            z-index: 9998;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            gap: 1rem;
+            animation: slideUp 0.3s ease;
+        }
+        .session-warning.show { display: flex; }
+        .session-warning button {
+            background: var(--accent);
+            border: none;
+            color: white;
+            padding: 0.4rem 0.9rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 600;
+            font-family: inherit;
+            transition: background 0.2s;
+        }
+        .session-warning button:hover { background: var(--accent2); }
+
+        /* ── AUTH PAGE ── */
+        .auth-wrap {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            padding-top: 3rem;
+        }
+
+        .auth-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 480px;
+            padding: 2.5rem;
+            box-shadow: var(--glow), 0 40px 80px rgba(0,0,0,0.6);
+            backdrop-filter: blur(20px);
+            animation: fadeUp 0.5s ease;
+        }
+
+        .auth-brand {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .auth-brand .logo-text {
+            font-family: 'Syne', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), #86efac);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -1px;
+        }
+
+        .creator-tag {
+            display: inline-block;
+            margin-top: 0.5rem;
+            background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(16,163,74,0.1));
+            border: 1px solid rgba(34,197,94,0.3);
+            color: var(--accent);
+            padding: 0.35rem 1.2rem;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .auth-subtitle {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+
+        /* Tabs */
+        .tab-row {
+            display: flex;
+            gap: 0.4rem;
+            margin-bottom: 1.8rem;
+            background: var(--surface);
+            padding: 4px;
+            border-radius: 12px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 0.55rem 0.5rem;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            border-radius: 9px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 2px 8px rgba(34,197,94,0.3);
+        }
+
+        /* Form */
+        .form-group { margin-bottom: 1.1rem; }
+        .form-group label {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 0.4rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(34,197,94,0.1);
+        }
+        .form-group input.error { border-color: var(--danger); }
+        .form-group input.valid { border-color: var(--accent); }
+
+        /* Password strength */
+        .pwd-strength { margin-top: 0.4rem; }
+        .pwd-bars { display: flex; gap: 3px; margin-bottom: 0.3rem; }
+        .pwd-bar {
+            flex: 1; height: 4px; border-radius: 2px;
+            background: var(--border);
+            transition: background 0.3s;
+        }
+        .pwd-bar.weak { background: var(--danger); }
+        .pwd-bar.fair { background: var(--warning); }
+        .pwd-bar.strong { background: var(--accent); }
+        .pwd-hint { font-size: 0.7rem; color: var(--text-muted); }
+        .pwd-req { font-size: 0.7rem; margin-top: 0.3rem; }
+        .pwd-req span { display: inline-block; margin-right: 0.5rem; }
+        .pwd-req .ok { color: var(--accent); }
+        .pwd-req .no { color: var(--danger); }
+
+        .btn-primary {
+            width: 100%;
+            padding: 0.8rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+            margin-top: 0.5rem;
+            letter-spacing: 0.3px;
+        }
+        .btn-primary:hover {
+            background: var(--accent2);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(34,197,94,0.3);
+        }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .auth-link {
+            text-align: center;
+            margin-top: 1.2rem;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+        .auth-link a { color: var(--accent); text-decoration: none; font-weight: 600; }
+
+        .msg-box {
+            padding: 0.7rem 1rem;
+            border-radius: 9px;
+            font-size: 0.8rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .msg-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+        .msg-success { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: #86efac; }
+
+        /* ── DASHBOARD ── */
+        .dash-wrap { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+        .topbar {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            margin-top: 0.5rem;
+            backdrop-filter: blur(20px);
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .topbar-logo {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), #86efac);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .topbar-right { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+        .session-chip {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 0.35rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .btn-logout {
+            padding: 0.45rem 1.1rem;
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.3);
+            color: #fca5a5;
+            border-radius: 9px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .btn-logout:hover { background: rgba(239,68,68,0.2); }
+
+        /* Stats */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.2rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        .stat-card .num {
+            font-family: 'Syne', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--accent);
+            line-height: 1;
+        }
+        .stat-card .label { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+        /* Courses grid */
+        .section-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin-bottom: 1.2rem;
+            color: var(--text);
+        }
+        .courses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.2rem;
+            margin-bottom: 2rem;
+        }
+        .course-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            backdrop-filter: blur(10px);
+        }
+        .course-card:hover { transform: translateY(-3px); box-shadow: var(--glow); }
+        .course-card .c-head {
+            background: linear-gradient(135deg, #0f2a1a, #0a1f2e);
+            border-bottom: 1px solid var(--border);
+            padding: 1.1rem;
+        }
+        .course-card .c-head h3 { font-size: 0.95rem; font-weight: 700; color: var(--text); }
+        .course-card .c-head .badge {
+            display: inline-block;
+            margin-top: 0.4rem;
+            padding: 0.15rem 0.6rem;
+            border-radius: 40px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            background: rgba(34,197,94,0.15);
+            color: var(--accent);
+            border: 1px solid rgba(34,197,94,0.25);
+        }
+        .course-card .c-body { padding: 1.1rem; }
+        .course-card .c-desc { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.8rem; }
+        .course-card .c-meta { font-size: 0.72rem; color: var(--text-muted); display: flex; gap: 0.8rem; margin-bottom: 0.8rem; }
+
+        .progress-wrap { margin-bottom: 0.8rem; }
+        .progress-label { font-size: 0.72rem; color: var(--text-muted); display: flex; justify-content: space-between; margin-bottom: 0.3rem; }
+        .progress-bar { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #86efac); border-radius: 3px; transition: width 0.4s ease; }
+
+        .btn-enroll {
+            width: 100%;
+            padding: 0.6rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 9px;
+            font-weight: 700;
+            font-size: 0.82rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+            margin-top: 0.3rem;
+        }
+        .btn-enroll:hover { background: var(--accent2); }
+        .btn-complete {
+            width: 100%;
+            padding: 0.6rem;
+            background: rgba(34,197,94,0.1);
+            border: 1px solid rgba(34,197,94,0.3);
+            color: var(--accent);
+            border-radius: 9px;
+            font-weight: 700;
+            font-size: 0.82rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+            margin-top: 0.3rem;
+        }
+        .btn-complete:hover { background: rgba(34,197,94,0.2); }
+        .btn-unenroll {
+            width: 100%;
+            padding: 0.5rem;
+            background: transparent;
+            border: 1px solid rgba(239,68,68,0.3);
+            color: #fca5a5;
+            border-radius: 9px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+            margin-top: 0.4rem;
+        }
+        .btn-unenroll:hover { background: rgba(239,68,68,0.1); }
+        .btn-yt {
+            width: 100%;
+            padding: 0.6rem;
+            background: rgba(255,0,0,0.1);
+            border: 1px solid rgba(255,0,0,0.3);
+            color: #ff6b6b;
+            border-radius: 9px;
+            font-weight: 700;
+            font-size: 0.82rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+            margin-top: 0.4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+        .btn-yt:hover {
+            background: rgba(255,0,0,0.2);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(255,0,0,0.2);
+        }
+
+        /* ── ALL COMPLETED BANNER ── */
+        .all-done-banner {
+            background: linear-gradient(135deg, rgba(34,197,94,0.12), rgba(16,163,74,0.08));
+            border: 1px solid rgba(34,197,94,0.4);
+            border-radius: 20px;
+            padding: 2rem 2.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            animation: fadeUp 0.6s ease;
+        }
+        .all-done-banner::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(34,197,94,0.07), transparent);
+            pointer-events: none;
+        }
+        .all-done-banner .trophy { font-size: 3rem; margin-bottom: 0.5rem; animation: trophyBounce 1s ease infinite alternate; }
+        @keyframes trophyBounce { from { transform: translateY(0); } to { transform: translateY(-8px); } }
+        .all-done-banner h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--accent);
+            margin-bottom: 0.4rem;
+        }
+        .all-done-banner p { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.2rem; }
+        .btn-certificate {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.8rem 2rem;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+            box-shadow: 0 4px 20px rgba(34,197,94,0.35);
+        }
+        .btn-certificate:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(34,197,94,0.45); }
+
+        /* ── CERTIFICATE MODAL ── */
+        .cert-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 9000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            backdrop-filter: blur(8px);
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+        .cert-modal {
+            background: white;
+            border-radius: 20px;
+            padding: 1rem;
+            max-width: 780px;
+            width: 100%;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+            animation: fadeUp 0.4s ease;
+        }
+        .cert-actions {
+            display: flex;
+            gap: 0.8rem;
+            justify-content: center;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        .cert-actions button {
+            padding: 0.6rem 1.5rem;
+            border-radius: 10px;
+            border: none;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .btn-download { background: #22c55e; color: white; }
+        .btn-download:hover { background: #16a34a; }
+        .btn-close-cert { background: #f1f5f9; color: #64748b; }
+        .btn-close-cert:hover { background: #e2e8f0; }
+        .completed-badge {
+            text-align: center;
+            padding: 0.5rem;
+            background: rgba(34,197,94,0.1);
+            border: 1px solid rgba(34,197,94,0.3);
+            border-radius: 9px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-top: 0.3rem;
+        }
+
+        /* Admin table */
+        .admin-table-wrap {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+        }
+        .admin-table-head {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+        }
+        .admin-table th {
+            padding: 0.9rem 1.2rem;
+            text-align: left;
+            background: rgba(34,197,94,0.06);
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+        }
+        .admin-table td {
+            padding: 0.9rem 1.2rem;
+            border-bottom: 1px solid rgba(51,65,85,0.5);
+            color: var(--text);
+        }
+        .admin-table tr:last-child td { border-bottom: none; }
+        .hash-pill {
+            font-family: 'Courier New', monospace;
+            font-size: 0.68rem;
+            background: var(--surface2);
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            color: var(--accent);
+            max-width: 280px;
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .role-chip {
+            padding: 0.2rem 0.6rem;
+            border-radius: 40px;
+            font-size: 0.68rem;
+            font-weight: 700;
+        }
+        .role-student { background: rgba(34,197,94,0.1); color: var(--accent); border: 1px solid rgba(34,197,94,0.2); }
+        .role-admin { background: rgba(245,158,11,0.1); color: #fbbf24; border: 1px solid rgba(245,158,11,0.2); }
+
+        footer {
+            text-align: center;
+            padding: 2rem 0 1rem;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            right: 24px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.8rem 1.2rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            z-index: 9999;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            animation: slideUp 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .auth-card { padding: 1.8rem 1.4rem; }
+            .dash-wrap { padding: 1rem; }
+            .courses-grid { grid-template-columns: 1fr; }
+            .admin-table-wrap { overflow-x: auto; }
+        }
+
+        /* ── QUIZ STYLES ── */
+        .btn-take-quiz {
+            width: 100%;
+            padding: 0.65rem;
+            background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(234,88,12,0.1));
+            border: 1px solid rgba(245,158,11,0.4);
+            color: #fbbf24;
+            border-radius: 9px;
+            font-weight: 700;
+            font-size: 0.82rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+            margin-top: 0.4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .btn-take-quiz:hover { background: linear-gradient(135deg,rgba(245,158,11,0.25),rgba(234,88,12,0.2)); transform: translateY(-1px); }
+        .quiz-passed-badge { text-align:center; padding:0.5rem; background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.3); border-radius:9px; font-size:0.78rem; font-weight:700; color:var(--accent); margin-top:0.4rem; }
+        .quiz-locked-badge { text-align:center; padding:0.5rem; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.25); border-radius:9px; font-size:0.75rem; color:#fbbf24; margin-top:0.4rem; }
+        .quiz-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:9000; display:flex; align-items:center; justify-content:center; padding:1rem; backdrop-filter:blur(10px); animation:fadeIn 0.3s ease; }
+        .quiz-modal { background:var(--card-bg); border:1px solid var(--border); border-radius:20px; width:100%; max-width:620px; max-height:90vh; overflow-y:auto; padding:2rem; box-shadow:0 40px 80px rgba(0,0,0,0.6); animation:fadeUp 0.4s ease; }
+        .quiz-header { margin-bottom:1.5rem; }
+        .quiz-header h2 { font-family:"Syne",sans-serif; font-size:1.2rem; font-weight:800; color:var(--accent); }
+        .quiz-header p  { font-size:0.8rem; color:var(--text-muted); margin-top:0.3rem; }
+        .quiz-progress-bar { height:4px; background:var(--surface2); border-radius:2px; margin:1rem 0; }
+        .quiz-progress-fill { height:100%; background:var(--accent); border-radius:2px; transition:width 0.4s ease; }
+        .quiz-question { font-size:0.95rem; font-weight:600; color:var(--text); margin-bottom:1.2rem; line-height:1.5; }
+        .quiz-options { display:flex; flex-direction:column; gap:0.7rem; margin-bottom:1.5rem; }
+        .quiz-option { padding:0.75rem 1rem; background:var(--surface); border:1.5px solid var(--border); border-radius:10px; cursor:pointer; font-size:0.88rem; color:var(--text); transition:all 0.2s; text-align:left; font-family:inherit; font-weight:500; }
+        .quiz-option:hover { border-color:var(--accent); background:rgba(34,197,94,0.07); }
+        .quiz-option.selected { border-color:var(--accent); background:rgba(34,197,94,0.12); color:#86efac; }
+        .quiz-option.correct  { border-color:var(--accent); background:rgba(34,197,94,0.2); color:#86efac; pointer-events:none; }
+        .quiz-option.wrong    { border-color:var(--danger);  background:rgba(239,68,68,0.12); color:#fca5a5; pointer-events:none; }
+        .quiz-option.reveal   { border-color:var(--accent); background:rgba(34,197,94,0.1); color:#86efac; pointer-events:none; }
+        .quiz-nav { display:flex; justify-content:space-between; align-items:center; gap:1rem; }
+        .btn-quiz-next { padding:0.65rem 1.8rem; background:var(--accent); color:white; border:none; border-radius:10px; font-weight:700; font-size:0.88rem; cursor:pointer; font-family:inherit; transition:all 0.2s; }
+        .btn-quiz-next:hover { background:var(--accent2); }
+        .btn-quiz-next:disabled { opacity:0.4; cursor:not-allowed; }
+        .quiz-counter { font-size:0.8rem; color:var(--text-muted); }
+        .quiz-result { text-align:center; padding:1rem 0; }
+        .quiz-result .score-circle { width:110px; height:110px; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; margin:0 auto 1.2rem; font-family:"Syne",sans-serif; }
+        .score-pass { background:rgba(34,197,94,0.15); border:3px solid var(--accent); }
+        .score-fail { background:rgba(239,68,68,0.12); border:3px solid var(--danger); }
+        .quiz-result .score-num { font-size:1.8rem; font-weight:800; }
+        .quiz-result .score-label { font-size:0.7rem; color:var(--text-muted); }
+        .quiz-result h3 { font-family:"Syne",sans-serif; font-size:1.3rem; font-weight:800; margin-bottom:0.5rem; }
+        .quiz-result p  { font-size:0.85rem; color:var(--text-muted); margin-bottom:1.2rem; line-height:1.6; }
+        .retry-timer { font-size:0.82rem; color:#fbbf24; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); padding:0.6rem 1rem; border-radius:9px; margin-bottom:1rem; }
+        .btn-quiz-close { padding:0.65rem 2rem; background:var(--surface2); color:var(--text); border:none; border-radius:10px; font-weight:600; font-size:0.88rem; cursor:pointer; font-family:inherit; }
+    </style>
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+<div class="session-bar"><div id="sessionFill" class="session-bar-fill"></div></div>
+<div id="sessionWarning" class="session-warning">
+    <i class="fas fa-clock" style="color:var(--warning)"></i>
+    <span>Session expiring in <strong><span id="warnSec">30</span>s</strong></span>
+    <button id="stayBtn">Stay Logged In</button>
+</div>
+
+<div id="app"></div>
+
+<script>
+// ─────────────────────────────────────────────
+// SESSION MANAGEMENT
+// ─────────────────────────────────────────────
+const SESSION_MS   = 2 * 60 * 1000;   // 2 minutes
+const WARN_MS      = 30 * 1000;        // warn at 30s remaining
+const COOKIE_NAME  = "slms_token";
+const SESSION_KEY  = "slms_session";
+
+let sTimer = null, wTimer = null, wInterval = null;
+
+function setCookie(val) {
+    const exp = new Date(Date.now() + SESSION_MS).toUTCString();
+    document.cookie = `${COOKIE_NAME}=${encodeURIComponent(val)}; expires=${exp}; path=/; SameSite=Strict`;
+}
+function getCookie() {
+    const p = COOKIE_NAME + "=";
+    for (let c of decodeURIComponent(document.cookie).split(';')) {
+        c = c.trim();
+        if (c.startsWith(p)) return c.substring(p.length);
+    }
+    return "";
+}
+function delCookie() {
+    document.cookie = `${COOKIE_NAME}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Strict`;
+}
+
+function resetActivityTimer() {
+    if (sTimer) clearTimeout(sTimer);
+    if (wTimer) clearTimeout(wTimer);
+    if (wInterval) clearInterval(wInterval);
+    const el = document.getElementById("sessionWarning");
+    if (el) el.classList.remove("show");
+    startTimers();
+}
+
+function startTimers() {
+    const start = Date.now();
+    const end   = start + SESSION_MS;
+
+    (function tick() {
+        const remaining = Math.max(0, end - Date.now());
+        const pct = (remaining / SESSION_MS) * 100;
+        const fill = document.getElementById("sessionFill");
+        if (fill) {
+            fill.style.width = pct + "%";
+            fill.style.background = pct < 25
+                ? "linear-gradient(90deg,#ef4444,#dc2626)"
+                : pct < 50
+                ? "linear-gradient(90deg,#f59e0b,#ea580c)"
+                : "linear-gradient(90deg,#22c55e,#86efac)";
+        }
+        if (remaining > 0) requestAnimationFrame(tick);
+    })();
+
+    wTimer = setTimeout(() => {
+        const el = document.getElementById("sessionWarning");
+        const sec = document.getElementById("warnSec");
+        if (!el) return;
+        el.classList.add("show");
+        let c = 30;
+        wInterval = setInterval(() => {
+            c--; if (sec) sec.textContent = c;
+            if (c <= 0) clearInterval(wInterval);
+        }, 1000);
+    }, SESSION_MS - WARN_MS);
+
+    sTimer = setTimeout(() => doLogout("Logged out: 2 minutes of inactivity."), SESSION_MS);
+}
+
+function trackActivity() {
+    ['mousedown','keydown','scroll','touchstart','click'].forEach(ev =>
+        document.addEventListener(ev, resetActivityTimer)
+    );
+}
+
+function initSession() {
+    const sess = getSession();
+    if (sess?.isLoggedIn) {
+        setCookie(btoa(sess.user.id + ":" + Date.now()));
+        resetActivityTimer();
+        trackActivity();
+    }
+}
+
+document.addEventListener("click", e => {
+    if (e.target.id === "stayBtn") {
+        resetActivityTimer();
+        const el = document.getElementById("sessionWarning");
+        if (el) el.classList.remove("show");
+        toast("✅ Session extended — 2 minutes reset.");
+    }
+});
+
+// ─────────────────────────────────────────────
+// AUTH / STORAGE
+// ─────────────────────────────────────────────
+const STUDENTS_KEY  = "slms_students_v4";
+// Admin credentials stored as pre-computed hashes only - no plaintext in source
+const ADMIN_EMAIL_HASH = "fnv1a$22381584";
+const ADMIN_PASS_HASH  = "fnv1a$066e0ab0";
+const MAX_ATTEMPTS  = 5;
+const LOCKOUT_MS    = 15 * 60 * 1000;
+
+// Deterministic hash (FNV-1a 32-bit, no random — fixes broken login)
+function hashPassword(pw) {
+    let h = 2166136261 >>> 0;
+    for (let i = 0; i < pw.length; i++) {
+        h ^= pw.charCodeAt(i);
+        h = Math.imul(h, 16777619) >>> 0;
+    }
+    return "fnv1a$" + h.toString(16).padStart(8, "0");
+}
+
+function validateEmail(e) { return /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(e); }
+function validateName(n)  { return /^[a-zA-Z\s]{2,50}$/.test(n.trim()); }
+function checkPwdStrength(pw) {
+    if (!pw) return { score: 0, errors: [] };
+    const checks = {
+        len:     { ok: pw.length >= 8,                   msg: "8+ chars" },
+        upper:   { ok: /[A-Z]/.test(pw),                 msg: "Uppercase" },
+        lower:   { ok: /[a-z]/.test(pw),                 msg: "Lowercase" },
+        num:     { ok: /\d/.test(pw),                    msg: "Number" },
+        special: { ok: /[!@#$%^&*(),.?":{}|<>]/.test(pw), msg: "Special (!@#…)" },
+    };
+    const errors = Object.values(checks).filter(c => !c.ok).map(c => c.msg);
+    const score  = Object.values(checks).filter(c => c.ok).length;
+    return { score, errors, checks };
+}
+
+function getStudents() {
+    try { return JSON.parse(localStorage.getItem(STUDENTS_KEY) || "[]"); } catch(e) { return []; }
+}
+function saveStudents(arr) { localStorage.setItem(STUDENTS_KEY, JSON.stringify(arr)); }
+function getSession()   {
+    try { return JSON.parse(localStorage.getItem(SESSION_KEY)); } catch(e) { return null; }
+}
+function setSession(d)  { localStorage.setItem(SESSION_KEY, JSON.stringify(d)); }
+function clearSession() { localStorage.removeItem(SESSION_KEY); delCookie(); if(sTimer) clearTimeout(sTimer); if(wTimer) clearTimeout(wTimer); if(wInterval) clearInterval(wInterval); }
+
+function getLoginAttempts(email) {
+    try { return JSON.parse(localStorage.getItem("slms_att_" + email) || '{"count":0,"lockUntil":0}'); } catch(e) { return { count:0, lockUntil:0 }; }
+}
+function recordFail(email) {
+    const d = getLoginAttempts(email), now = Date.now();
+    if (d.lockUntil > now) return { locked: true, mins: Math.ceil((d.lockUntil-now)/60000) };
+    if (d.lockUntil && d.lockUntil <= now) { d.count = 0; d.lockUntil = 0; }
+    d.count = (d.count||0) + 1;
+    if (d.count >= MAX_ATTEMPTS) d.lockUntil = now + LOCKOUT_MS;
+    localStorage.setItem("slms_att_" + email, JSON.stringify(d));
+    return { locked: d.lockUntil > now, mins: d.lockUntil > now ? Math.ceil((d.lockUntil-now)/60000) : 0 };
+}
+function resetFail(email) { localStorage.removeItem("slms_att_" + email); }
+
+function registerStudent(name, email, pw) {
+    if (!validateName(name))  return { ok:false, msg:"Name must be 2-50 letters only." };
+    if (!validateEmail(email)) return { ok:false, msg:"Invalid email format." };
+    const pwd = checkPwdStrength(pw);
+    if (pwd.score < 5)        return { ok:false, msg:"Weak password: " + pwd.errors.join(", ") + "." };
+    const students = getStudents();
+    if (students.find(s => s.email === email.toLowerCase())) return { ok:false, msg:"Email already registered." };
+    students.push({
+        id: "s" + Date.now(), name: name.trim(),
+        email: email.toLowerCase(), passwordHash: hashPassword(pw),
+        enrolledCourses: [], progress: {},
+        createdAt: new Date().toISOString(), lastLogin: null
+    });
+    saveStudents(students);
+    return { ok:true, msg:"Account created! Please log in." };
+}
+
+function loginStudent(email, pw) {
+    const em = email.toLowerCase().trim();
+    const att = recordFail(em);
+    if (att.locked) return { ok:false, msg:`Account locked. Try again in ${att.mins} min.` };
+    if (!validateEmail(em)) return { ok:false, msg:"Invalid email." };
+    const students = getStudents();
+    const s = students.find(x => x.email === em && x.passwordHash === hashPassword(pw));
+    if (!s) return { ok:false, msg:"Incorrect email or password." };
+    resetFail(em);
+    s.lastLogin = new Date().toISOString();
+    saveStudents(students);
+    setSession({ isLoggedIn:true, user:{ id:s.id, name:s.name, email:s.email, role:"student" }});
+    return { ok:true };
+}
+
+function loginAdmin(email, pw) {
+    const eHash = hashPassword ? "fnv1a$" + (function(s){ let h=2166136261>>>0; for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)>>>0;} return h.toString(16).padStart(8,"0"); })(email) : "";
+    const pHash = "fnv1a$" + (function(s){ let h=2166136261>>>0; for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)>>>0;} return h.toString(16).padStart(8,"0"); })(pw);
+    if (eHash === ADMIN_EMAIL_HASH && pHash === ADMIN_PASS_HASH) {
+        setSession({ isLoggedIn:true, user:{ id:"admin", name:"Administrator", email:email, role:"admin" }});
+        return { ok:true };
+    }
+    return { ok:false, msg:"Invalid admin credentials." };
+}
+
+function doLogout(reason) {
+    clearSession(); window.currentSession = null;
+    render();
+    if (reason) toast("🔒 " + reason);
+}
+
+function getFullStudent() {
+    const sess = getSession();
+    if (!sess || sess.user?.role !== "student") return null;
+    return getStudents().find(s => s.id === sess.user.id);
+}
+function updateStudent(upd) {
+    const arr = getStudents(), i = arr.findIndex(s => s.id === upd.id);
+    if (i !== -1) { arr[i] = upd; saveStudents(arr); }
+}
+function enrollCourse(cid) {
+    const s = getFullStudent();
+    if (!s || s.enrolledCourses.includes(cid)) return false;
+    s.enrolledCourses.push(cid);
+    if (!s.progress[cid]) s.progress[cid] = 0;
+    updateStudent(s); return true;
+}
+function unenrollCourse(cid) {
+    const s = getFullStudent();
+    if (!s) return false;
+    const i = s.enrolledCourses.indexOf(cid);
+    if (i !== -1) { s.enrolledCourses.splice(i,1); delete s.progress[cid]; updateStudent(s); return true; }
+    return false;
+}
+function completeLesson(cid) {
+    const s = getFullStudent();
+    const course = COURSES.find(c => c.id === cid);
+    if (!s || !course) return false;
+    const cur = s.progress[cid] || 0;
+    if (cur < course.totalLessons) { s.progress[cid] = cur+1; updateStudent(s); return true; }
+    return false;
+}
+function getProgress(cid) {
+    const s = getFullStudent(), course = COURSES.find(c => c.id === cid);
+    if (!s || !course) return 0;
+    return Math.min(100, Math.floor(((s.progress[cid]||0) / course.totalLessons) * 100));
+}
+
+function escHtml(s) { return String(s).replace(/[&<>'"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m])); }
+
+function toast(msg) {
+    const t = document.createElement("div");
+    t.className = "toast";
+    t.innerHTML = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 4000);
+}
+
+// ─────────────────────────────────────────────
+// COURSES DATA
+// ─────────────────────────────────────────────
+const COURSES = [
+    { id:"c1", title:"Cybersecurity Foundations",     desc:"Zero-trust architecture, threat modeling, security principles",  duration:"6 weeks", level:"Intermediate", totalLessons:5, ytLink:"https://www.youtube.com/watch?v=hXSFdwIOfnE", ytLabel:"Watch: Cybersecurity Full Course" },
+    { id:"c2", title:"Secure Software Development",   desc:"OWASP Top 10, SAST/DAST tools, secure code review practices",    duration:"8 weeks", level:"Advanced",     totalLessons:7, ytLink:"https://www.youtube.com/watch?v=F5KJVuii0Yw", ytLabel:"Watch: Secure Coding Practices" },
+    { id:"c3", title:"Cloud Security & DevSecOps",    desc:"AWS/Azure security controls, CI/CD security pipelines",          duration:"5 weeks", level:"Intermediate", totalLessons:6, ytLink:"https://www.youtube.com/watch?v=oBf5lrmquYI", ytLabel:"Watch: Cloud Security Full Course" },
+    { id:"c4", title:"Applied Cryptography",           desc:"Encryption algorithms, hashing, PKI, digital signatures",        duration:"4 weeks", level:"Advanced",     totalLessons:5, ytLink:"https://www.youtube.com/watch?v=AQDCe585Lnc", ytLabel:"Watch: Cryptography Full Course" },
+    { id:"c5", title:"Web App Penetration Testing",   desc:"XSS, SQL injection, CSRF, Burp Suite, ethical hacking",          duration:"7 weeks", level:"Expert",       totalLessons:8, ytLink:"https://www.youtube.com/watch?v=3Kq1MIfTWCE", ytLabel:"Watch: Ethical Hacking Full Course" },
+    { id:"c6", title:"AI & Machine Learning Security","desc":"Adversarial ML, model poisoning, privacy attacks & defenses",  duration:"5 weeks", level:"Advanced",     totalLessons:6, ytLink:"https://www.youtube.com/watch?v=qTgPSzvDX9o", ytLabel:"Watch: AI Security & Adversarial ML" },
+];
+
+
+// ─────────────────────────────────────────────
+// QUIZ DATA  (5 questions per course, correct answer index 0-based)
+// ─────────────────────────────────────────────
+const QUIZ_RETRY_MS = 30 * 60 * 1000; // 30 minutes lockout on fail
+const PASS_SCORE    = 60;              // 60% to pass
+
+const QUIZZES = {
+    c1: { title:"Cybersecurity Foundations Quiz", questions:[
+        { q:"What does the Zero Trust security model assume?", opts:["No user or device is trusted by default","Internal network traffic is always safe","Firewalls are sufficient for protection","Only external threats matter"], ans:0 },
+        { q:"Which of the following is a threat modeling framework?", opts:["STRIDE","OWASP","NIST CSF","ISO 27001"], ans:0 },
+        { q:"What is the CIA triad in cybersecurity?", opts:["Confidentiality, Integrity, Availability","Control, Identify, Analyze","Certify, Inspect, Audit","Classify, Isolate, Authenticate"], ans:0 },
+        { q:"What is a vulnerability?", opts:["A weakness that can be exploited","A type of malware","A network protocol","An encryption algorithm"], ans:0 },
+        { q:"Which principle limits user access to only what is needed?", opts:["Least Privilege","Defense in Depth","Zero Trust","Need to Know"], ans:0 }
+    ]},
+    c2: { title:"Secure Software Development Quiz", questions:[
+        { q:"What does OWASP stand for?", opts:["Open Web Application Security Project","Open Worldwide Application Security Protocol","Online Web App Security Platform","Open Web Access Security Program"], ans:0 },
+        { q:"What is SQL Injection?", opts:["Inserting malicious SQL into input fields to manipulate databases","A method of encrypting SQL queries","A database backup technique","A SQL performance optimization"], ans:0 },
+        { q:"What does SAST stand for?", opts:["Static Application Security Testing","Secure Application System Testing","Software Audit Security Tool","Static Access Security Technique"], ans:0 },
+        { q:"Which HTTP header helps prevent XSS attacks?", opts:["Content-Security-Policy","X-Frame-Options","Strict-Transport-Security","X-Content-Type-Options"], ans:0 },
+        { q:"What is the purpose of input validation?", opts:["To ensure data meets expected format before processing","To speed up database queries","To encrypt user data","To log user activity"], ans:0 }
+    ]},
+    c3: { title:"Cloud Security & DevSecOps Quiz", questions:[
+        { q:"What does IAM stand for in cloud security?", opts:["Identity and Access Management","Internet Access Monitor","Integrated Application Management","Internal Audit Mechanism"], ans:0 },
+        { q:"What is a Cloud Security Posture Management (CSPM) tool used for?", opts:["Identifying misconfigurations in cloud environments","Encrypting cloud data at rest","Managing cloud billing","Scaling cloud infrastructure"], ans:0 },
+        { q:"What does DevSecOps integrate into the DevOps pipeline?", opts:["Security practices at every stage","Only final security testing","Manual code reviews","Hardware security modules"], ans:0 },
+        { q:"What is the Shared Responsibility Model?", opts:["Cloud provider and customer share security duties","Only the provider is responsible for security","Only the customer is responsible","A model for sharing cloud costs"], ans:0 },
+        { q:"Which AWS service provides threat detection?", opts:["Amazon GuardDuty","Amazon S3","AWS Lambda","Amazon EC2"], ans:0 }
+    ]},
+    c4: { title:"Applied Cryptography Quiz", questions:[
+        { q:"What is symmetric encryption?", opts:["Same key used for encryption and decryption","Different keys for encryption and decryption","No key is used","A hashing technique"], ans:0 },
+        { q:"What does PKI stand for?", opts:["Public Key Infrastructure","Private Key Integration","Public Key Index","Protected Key Interface"], ans:0 },
+        { q:"Which hashing algorithm produces a 256-bit hash?", opts:["SHA-256","MD5","SHA-1","CRC32"], ans:0 },
+        { q:"What is a digital signature used for?", opts:["Verifying authenticity and integrity of data","Encrypting messages","Storing passwords","Compressing files"], ans:0 },
+        { q:"What is a man-in-the-middle attack?", opts:["Intercepting communication between two parties","Installing malware on a server","Brute-forcing a password","Exploiting a buffer overflow"], ans:0 }
+    ]},
+    c5: { title:"Web App Penetration Testing Quiz", questions:[
+        { q:"What does XSS stand for?", opts:["Cross-Site Scripting","Cross-Server Security","Cross-Site Session","Cross-System Scripting"], ans:0 },
+        { q:"What tool is commonly used for web app penetration testing?", opts:["Burp Suite","Wireshark","Nmap","Metasploit"], ans:0 },
+        { q:"What is CSRF?", opts:["Cross-Site Request Forgery","Cross-Server Response Failure","Client-Side Request Forgery","Cross-System Resource Failure"], ans:0 },
+        { q:"What is a blind SQL injection?", opts:["SQLi where no visible error is returned but behavior changes","SQLi that only targets blind users","SQLi with no impact","SQLi using encrypted queries"], ans:0 },
+        { q:"What HTTP method is typically tested for parameter tampering?", opts:["GET and POST","DELETE only","HEAD only","OPTIONS only"], ans:0 }
+    ]},
+    c6: { title:"AI & ML Security Quiz", questions:[
+        { q:"What is an adversarial attack in ML?", opts:["Crafting inputs to fool a model into wrong predictions","Training a model with bad data","Hacking a GPU cluster","Stealing model weights"], ans:0 },
+        { q:"What is model poisoning?", opts:["Injecting malicious data into training to corrupt the model","Encrypting a machine learning model","Deleting training data","Overloading a model with requests"], ans:0 },
+        { q:"What is a membership inference attack?", opts:["Determining if specific data was used to train a model","Predicting model accuracy","Extracting model weights","Bypassing model authentication"], ans:0 },
+        { q:"What is differential privacy used for in ML?", opts:["Protecting individual data privacy during model training","Speeding up training","Reducing model size","Encrypting predictions"], ans:0 },
+        { q:"What is federated learning?", opts:["Training models on distributed devices without centralizing data","A cloud-based training technique","A supervised learning method","Training on encrypted datasets only"], ans:0 }
+    ]}
+};
+
+// Quiz state helpers
+const QUIZ_KEY = "slms_quiz_v1";
+function getQuizData(studentId) {
+    try { return JSON.parse(localStorage.getItem(QUIZ_KEY + "_" + studentId) || "{}"); } catch(e) { return {}; }
+}
+function saveQuizData(studentId, data) {
+    localStorage.setItem(QUIZ_KEY + "_" + studentId, JSON.stringify(data));
+}
+function hasPassedQuiz(studentId, courseId) {
+    const d = getQuizData(studentId);
+    return d[courseId]?.passed === true;
+}
+function getQuizLockUntil(studentId, courseId) {
+    const d = getQuizData(studentId);
+    return d[courseId]?.lockUntil || 0;
+}
+function recordQuizResult(studentId, courseId, passed) {
+    const d = getQuizData(studentId);
+    d[courseId] = { passed, lockUntil: passed ? 0 : Date.now() + QUIZ_RETRY_MS, attemptedAt: new Date().toISOString() };
+    saveQuizData(studentId, d);
+}
+
+// Show quiz modal
+function showQuiz(student, course) {
+    const questions = QUIZZES[course.id]?.questions || [];
+    let current = 0, score = 0, answered = false;
+
+    const overlay = document.createElement("div");
+    overlay.className = "quiz-overlay";
+    document.body.appendChild(overlay);
+
+    function renderQuestion() {
+        answered = false;
+        const q = questions[current];
+        const pct = ((current) / questions.length) * 100;
+        overlay.innerHTML = '<div class="quiz-modal">' +
+            '<div class="quiz-header">' +
+            '<h2><i class="fas fa-clipboard-question"></i> ' + escHtml(QUIZZES[course.id].title) + '</h2>' +
+            '<p>Pass 60% or above to complete the course and unlock your certificate.</p>' +
+            '<div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:' + pct + '%"></div></div>' +
+            '</div>' +
+            '<div class="quiz-question">Q' + (current+1) + '. ' + escHtml(q.q) + '</div>' +
+            '<div class="quiz-options">' +
+            q.opts.map((opt, i) => '<button class="quiz-option" data-i="' + i + '">' + escHtml(opt) + '</button>').join("") +
+            '</div>' +
+            '<div class="quiz-nav">' +
+            '<span class="quiz-counter">Question ' + (current+1) + ' of ' + questions.length + '</span>' +
+            '<button class="btn-quiz-next" id="qNext" disabled>Next &rarr;</button>' +
+            '</div></div>';
+
+        overlay.querySelectorAll(".quiz-option").forEach(btn => {
+            btn.onclick = () => {
+                if (answered) return;
+                answered = true;
+                const chosen = parseInt(btn.dataset.i);
+                const correct = q.ans;
+                if (chosen === correct) { score++; btn.classList.add("correct"); }
+                else {
+                    btn.classList.add("wrong");
+                    overlay.querySelectorAll(".quiz-option")[correct].classList.add("reveal");
+                }
+                overlay.querySelectorAll(".quiz-option").forEach(b => { if (!b.classList.contains("correct") && !b.classList.contains("wrong") && !b.classList.contains("reveal")) b.style.pointerEvents = "none"; });
+                document.getElementById("qNext").disabled = false;
+            };
+        });
+
+        document.getElementById("qNext").onclick = () => {
+            current++;
+            if (current < questions.length) renderQuestion();
+            else showResult();
+        };
+    }
+
+    function showResult() {
+        const pct = Math.round((score / questions.length) * 100);
+        const passed = pct >= PASS_SCORE;
+        recordQuizResult(student.id, course.id, passed);
+
+        overlay.innerHTML = '<div class="quiz-modal"><div class="quiz-result">' +
+            '<div class="score-circle ' + (passed ? "score-pass" : "score-fail") + '">' +
+            '<span class="score-num" style="color:' + (passed ? "var(--accent)" : "var(--danger)") + '">' + pct + '%</span>' +
+            '<span class="score-label">' + score + '/' + questions.length + ' correct</span>' +
+            '</div>' +
+            '<h3 style="color:' + (passed ? "var(--accent)" : "var(--danger)") + '">' + (passed ? "🎉 Quiz Passed!" : "❌ Quiz Failed") + '</h3>' +
+            '<p>' + (passed
+                ? "Excellent work! You have passed the <strong>" + escHtml(course.title) + "</strong> quiz. This course is now marked as completed. Complete all 6 courses to unlock your certificate!"
+                : "You scored " + pct + "% but need at least 60% to pass. Review the course material and try again in 30 minutes."
+            ) + '</p>' +
+            (!passed ? '<div class="retry-timer"><i class="fas fa-clock"></i> You can retry in <strong>30 minutes</strong></div>' : "") +
+            '<button class="btn-quiz-close" id="qClose">' + (passed ? "🏆 Back to Dashboard" : "📚 Back to Study") + '</button>' +
+            '</div></div>';
+
+        document.getElementById("qClose").onclick = () => { overlay.remove(); renderStudent(); };
+    }
+
+    renderQuestion();
+}
+
+// ─────────────────────────────────────────────
+// RENDER ENGINE
+// ─────────────────────────────────────────────
+const app = document.getElementById("app");
+
+function render() {
+    const sess = getSession();
+    if (!sess?.isLoggedIn) { renderAuth(); return; }
+    if (sess.user.role === "admin") { initSession(); renderAdmin(); }
+    else if (sess.user.role === "student") { initSession(); renderStudent(); }
+    else renderAuth();
+}
+
+// ── AUTH PAGE ──
+function renderAuth() {
+    app.innerHTML = `
+        <div class="auth-wrap">
+            <div class="auth-card">
+                <div class="auth-brand">
+                    <div class="logo-text">🔐 SecureLMS</div>
+                    <div class="creator-tag"><i class="fas fa-code"></i> &nbsp;ALI HAMZA</div>
+                    <div class="auth-subtitle"><i class="fas fa-clock"></i> Auto-logout after 2 min inactivity</div>
+                </div>
+                <div class="tab-row">
+                    <button class="tab-btn active" id="tabLogin">👨‍🎓 Login</button>
+                    <button class="tab-btn" id="tabRegister">📝 Register</button>
+                </div>
+                <!-- Admin tab hidden: press Ctrl+Shift+A to access -->
+                <div id="adminTabWrapper" style="display:none;">
+                    <button class="tab-btn" id="tabAdmin" style="width:100%;margin-top:0.5rem;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:#fbbf24;">🔒 Admin Access</button>
+                </div>
+                <div id="formArea"></div>
+            </div>
+        </div>`;
+
+    document.getElementById("tabLogin").onclick    = () => { setActive("tabLogin");    showLogin(); };
+    document.getElementById("tabRegister").onclick = () => { setActive("tabRegister"); showRegister(); };
+
+    // Secret keyboard shortcut: Ctrl + Shift + A  reveals admin tab
+    let _adminKeySeq = [];
+    document.addEventListener("keydown", function _adminKey(e) {
+        if (e.ctrlKey && e.shiftKey && e.key === "A") {
+            const wrapper = document.getElementById("adminTabWrapper");
+            if (wrapper) {
+                wrapper.style.display = "block";
+                document.getElementById("tabAdmin").onclick = () => { setActive("tabAdmin"); showAdmin(); };
+                document.removeEventListener("keydown", _adminKey);
+            }
+        }
+    });
+
+    function setActive(id) {
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        document.getElementById(id).classList.add("active");
+    }
+
+    function showLogin() {
+        document.getElementById("formArea").innerHTML = `
+            <div id="msg"></div>
+            <div class="form-group"><label>Email</label><input type="email" id="liEmail" placeholder="your@email.com"></div>
+            <div class="form-group"><label>Password</label><input type="password" id="liPwd" placeholder="••••••••"></div>
+            <button class="btn-primary" id="doLogin"><i class="fas fa-sign-in-alt"></i> Login</button>
+            <div class="auth-link">No account? <a href="#" id="goReg">Register here</a></div>`;
+
+        document.getElementById("doLogin").onclick = () => {
+            const email = document.getElementById("liEmail").value.trim();
+            const pw    = document.getElementById("liPwd").value;
+            if (!email || !pw) { showMsg("error","Please fill in all fields."); return; }
+            const r = loginStudent(email, pw);
+            if (r.ok) { showMsg("success","✅ Login successful!"); setTimeout(() => render(), 500); }
+            else showMsg("error", "❌ " + r.msg);
+        };
+        document.getElementById("goReg").onclick = e => { e.preventDefault(); setActive("tabRegister"); showRegister(); };
+
+        // Enter key support
+        ["liEmail","liPwd"].forEach(id => {
+            document.getElementById(id).addEventListener("keydown", e => {
+                if (e.key === "Enter") document.getElementById("doLogin").click();
+            });
+        });
+    }
+
+    function showRegister() {
+        document.getElementById("formArea").innerHTML = `
+            <div id="msg"></div>
+            <div class="form-group"><label>Full Name</label><input type="text" id="rName" placeholder="John Doe"></div>
+            <div class="form-group"><label>Email</label><input type="email" id="rEmail" placeholder="your@email.com"></div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="rPwd" placeholder="Min 8 chars, upper, lower, number, special">
+                <div class="pwd-strength" id="pwdStrength" style="display:none">
+                    <div class="pwd-bars">
+                        <div class="pwd-bar" id="pb1"></div>
+                        <div class="pwd-bar" id="pb2"></div>
+                        <div class="pwd-bar" id="pb3"></div>
+                        <div class="pwd-bar" id="pb4"></div>
+                        <div class="pwd-bar" id="pb5"></div>
+                    </div>
+                    <div class="pwd-req" id="pwdReqs"></div>
+                </div>
+            </div>
+            <button class="btn-primary" id="doReg"><i class="fas fa-user-plus"></i> Create Account</button>
+            <div class="auth-link">Already registered? <a href="#" id="goLogin">Login here</a></div>`;
+
+        document.getElementById("rPwd").addEventListener("input", () => {
+            const pw  = document.getElementById("rPwd").value;
+            const str = checkPwdStrength(pw);
+            const box = document.getElementById("pwdStrength");
+            if (!pw) { box.style.display = "none"; return; }
+            box.style.display = "block";
+            const bars = ["pb1","pb2","pb3","pb4","pb5"];
+            const cls  = str.score <= 1 ? "weak" : str.score <= 3 ? "fair" : "strong";
+            bars.forEach((id, i) => {
+                const el = document.getElementById(id);
+                el.className = "pwd-bar " + (i < str.score ? cls : "");
+            });
+            const checks = str.checks;
+            document.getElementById("pwdReqs").innerHTML = Object.entries(checks).map(([k,c]) =>
+                `<span class="${c.ok ? 'ok' : 'no'}">${c.ok ? '✓' : '✗'} ${c.msg}</span>`
+            ).join(" ");
+        });
+
+        document.getElementById("doReg").onclick = () => {
+            const name  = document.getElementById("rName").value;
+            const email = document.getElementById("rEmail").value.trim();
+            const pw    = document.getElementById("rPwd").value;
+            const r = registerStudent(name, email, pw);
+            if (r.ok) { showMsg("success","✅ " + r.msg); setTimeout(() => { setActive("tabLogin"); showLogin(); }, 1500); }
+            else showMsg("error","❌ " + r.msg);
+        };
+        document.getElementById("goLogin").onclick = e => { e.preventDefault(); setActive("tabLogin"); showLogin(); };
+    }
+
+    function showAdmin() {
+        document.getElementById("formArea").innerHTML = `
+            <div id="msg"></div>
+            <div class="msg-box" style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);color:#fbbf24;font-size:0.75rem;margin-bottom:1rem;">
+                <i class="fas fa-shield-alt"></i> Restricted access. Authorized personnel only.
+            </div>
+            <div class="form-group"><label>Admin Email</label><input type="email" id="aEmail" placeholder="Enter admin email"></div>
+            <div class="form-group"><label>Password</label><input type="password" id="aPwd" placeholder="Enter admin password"></div>
+            <button class="btn-primary" id="doAdmin" style="background:#d97706;"><i class="fas fa-shield-alt"></i> Admin Login</button>
+            <div class="auth-link"><a href="#" id="backLogin">← Back to student login</a></div>`;
+
+        document.getElementById("doAdmin").onclick = () => {
+            const r = loginAdmin(document.getElementById("aEmail").value, document.getElementById("aPwd").value);
+            if (r.ok) { showMsg("success","✅ Admin access granted."); setTimeout(() => render(), 500); }
+            else showMsg("error","❌ " + r.msg);
+        };
+        document.getElementById("backLogin").onclick = e => { e.preventDefault(); setActive("tabLogin"); showLogin(); };
+    }
+
+    function showMsg(type, txt) {
+        const el = document.getElementById("msg");
+        if (!el) return;
+        el.innerHTML = `<div class="msg-box msg-${type}">${txt}</div>`;
+    }
+
+    showLogin();
+}
+
+// ── ADMIN DASHBOARD ──
+function renderAdmin() {
+    const students = getStudents();
+    const totalEnr = students.reduce((s, x) => s + x.enrolledCourses.length, 0);
+    app.innerHTML = `
+        <div class="dash-wrap">
+            <div class="topbar">
+                <div class="topbar-logo">👑 Admin Console <span style="font-size:0.65rem;opacity:0.5;font-family:'Space Grotesk',sans-serif;font-weight:400;">by ALI HAMZA</span></div>
+                <div class="topbar-right">
+                    <span class="session-chip"><i class="fas fa-hourglass-half"></i> 2-min session</span>
+                    <button class="btn-logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                </div>
+            </div>
+            <div class="stats-row">
+                <div class="stat-card"><div class="num">${students.length}</div><div class="label">Total Students</div></div>
+                <div class="stat-card"><div class="num">${totalEnr}</div><div class="label">Enrollments</div></div>
+                <div class="stat-card"><div class="num">${COURSES.length}</div><div class="label">Courses</div></div>
+            </div>
+            <div class="admin-table-wrap">
+                <div class="admin-table-head"><i class="fas fa-users" style="color:var(--accent)"></i> Registered Students — Password Hashes Visible</div>
+                ${students.length === 0
+                    ? `<div style="padding:2rem;text-align:center;color:var(--text-muted)">No students registered yet.</div>`
+                    : `<table class="admin-table">
+                        <thead><tr>
+                            <th>#</th><th>Name</th><th>Email</th>
+                            <th>Password Hash (FNV-1a)</th><th>Courses</th><th>Registered</th>
+                        </tr></thead>
+                        <tbody>
+                            ${students.map((s,i) => `<tr>
+                                <td style="color:var(--text-muted)">${i+1}</td>
+                                <td><strong>${escHtml(s.name)}</strong></td>
+                                <td style="color:var(--text-muted)">${escHtml(s.email)}</td>
+                                <td><span class="hash-pill" title="${escHtml(s.passwordHash)}">${escHtml(s.passwordHash)}</span></td>
+                                <td><span class="role-student">${s.enrolledCourses.length} enrolled</span></td>
+                                <td style="color:var(--text-muted)">${new Date(s.createdAt).toLocaleDateString()}</td>
+                            </tr>`).join("")}
+                        </tbody>
+                    </table>`}
+            </div>
+            <footer>🔒 SecureLMS by ALI HAMZA · Session expires after 2 minutes of inactivity</footer>
+        </div>`;
+    document.getElementById("logoutBtn").onclick = () => doLogout("You have been logged out.");
+}
+
+// ── STUDENT DASHBOARD ──
+function renderStudent() {
+    const student = getFullStudent();
+    if (!student) { doLogout(); return; }
+    const allCompleted = student.enrolledCourses.length === COURSES.length &&
+                         student.enrolledCourses.every(c => getProgress(c) === 100) &&
+                         COURSES.every(c => hasPassedQuiz(student.id, c.id));
+
+    app.innerHTML = `
+        <div class="dash-wrap">
+            <div class="topbar">
+                <div class="topbar-logo">📚 SecureLMS <span style="font-size:0.65rem;opacity:0.5;font-family:'Space Grotesk',sans-serif;font-weight:400;">by ALI HAMZA</span></div>
+                <div class="topbar-right">
+                    <span class="session-chip"><i class="fas fa-user"></i> ${escHtml(student.name)}</span>
+                    <span class="session-chip"><i class="fas fa-hourglass-half"></i> 2-min timeout</span>
+                    <button class="btn-logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                </div>
+            </div>
+            <div class="stats-row">
+                <div class="stat-card"><div class="num">${student.enrolledCourses.length}</div><div class="label">Enrolled</div></div>
+                <div class="stat-card"><div class="num">${student.enrolledCourses.filter(c => getProgress(c)===100).length}</div><div class="label">Completed</div></div>
+                <div class="stat-card"><div class="num">${COURSES.length - student.enrolledCourses.length}</div><div class="label">Available</div></div>
+            </div>
+            ${allCompleted ? '<div class="all-done-banner"><div class="trophy">🏆</div><h2>Congratulations, ' + escHtml(student.name) + '!</h2><p>You have successfully completed <strong>all ' + COURSES.length + ' courses</strong> in the SecureLMS program.<br>You are now a certified Cybersecurity Professional!</p><button class="btn-certificate" id="getCertBtn"><i class="fas fa-certificate"></i> Download Your Certificate</button></div>' : ""}
+            <div class="section-title"><i class="fas fa-book-open" style="color:var(--accent)"></i> All Courses</div>
+            <div class="courses-grid" id="coursesGrid"></div>
+            <footer>🔒 SecureLMS by ALI HAMZA · Session expires after 2 minutes of inactivity</footer>
+        </div>`;
+
+    const grid = document.getElementById("coursesGrid");
+    const quizData = getQuizData(student.id);
+
+    COURSES.forEach(course => {
+        const enrolled   = student.enrolledCourses.includes(course.id);
+        const prog       = enrolled ? getProgress(course.id) : 0;
+        const lessonsComplete = prog === 100;
+        const quizPassed = hasPassedQuiz(student.id, course.id);
+        const lockUntil  = getQuizLockUntil(student.id, course.id);
+        const locked     = lockUntil > Date.now();
+        const completed  = student.progress[course.id] || 0;
+
+        // Quiz button state
+        let quizHTML = "";
+        if (lessonsComplete) {
+            if (quizPassed) {
+                quizHTML = '<div class="quiz-passed-badge"><i class="fas fa-medal"></i> Quiz Passed ✓</div>';
+            } else if (locked) {
+                const mins = Math.ceil((lockUntil - Date.now()) / 60000);
+                quizHTML = '<div class="quiz-locked-badge"><i class="fas fa-lock"></i> Quiz locked — retry in ' + mins + ' min</div>';
+            } else {
+                quizHTML = '<button class="btn-take-quiz" data-id="' + course.id + '"><i class="fas fa-clipboard-question"></i> Take Quiz to Complete</button>';
+            }
+        }
+
+        const card = document.createElement("div");
+        card.className = "course-card";
+        card.innerHTML =
+            '<div class="c-head">' +
+            '<h3>' + escHtml(course.title) + '</h3>' +
+            '<span class="badge">' + escHtml(course.level) + '</span>' +
+            '</div>' +
+            '<div class="c-body">' +
+            '<p class="c-desc">' + escHtml(course.desc) + '</p>' +
+            '<div class="c-meta">' +
+            '<span><i class="fas fa-clock"></i> ' + course.duration + '</span>' +
+            '<span><i class="fas fa-book"></i> ' + course.totalLessons + ' lessons</span>' +
+            '</div>' +
+            (enrolled ? (
+                '<div class="progress-wrap">' +
+                '<div class="progress-label"><span>Lessons</span><span>' + completed + '/' + course.totalLessons + ' · ' + prog + '%</span></div>' +
+                '<div class="progress-bar"><div class="progress-fill" style="width:' + prog + '%"></div></div>' +
+                '</div>' +
+                '<a class="btn-yt" href="' + course.ytLink + '" target="_blank" rel="noopener noreferrer">' +
+                '<i class="fab fa-youtube"></i> ' + escHtml(course.ytLabel) + '</a>' +
+                (lessonsComplete
+                    ? (quizPassed
+                        ? '<div class="completed-badge">🎉 Course Completed!</div>'
+                        : quizHTML)
+                    : '<button class="btn-complete" data-id="' + course.id + '"><i class="fas fa-check-circle"></i> Complete a Lesson</button>') +
+                (quizPassed ? "" : quizHTML && lessonsComplete ? "" : "") +
+                (lessonsComplete && !quizPassed ? "" : "") +
+                '<button class="btn-unenroll" data-id="' + course.id + '">Unenroll</button>'
+            ) : (
+                '<button class="btn-enroll" data-id="' + course.id + '"><i class="fas fa-plus-circle"></i> Enroll Now</button>'
+            )) +
+            '</div>';
+        grid.appendChild(card);
+    });
+
+    grid.querySelectorAll(".btn-enroll").forEach(b => b.onclick = () => { if (enrollCourse(b.dataset.id)) renderStudent(); });
+    grid.querySelectorAll(".btn-complete").forEach(b => b.onclick = () => { if (completeLesson(b.dataset.id)) renderStudent(); });
+    grid.querySelectorAll(".btn-unenroll").forEach(b => b.onclick = () => {
+        if (confirm("Unenroll from this course? Your progress will be lost.")) {
+            unenrollCourse(b.dataset.id); renderStudent();
+        }
+    });
+    grid.querySelectorAll(".btn-take-quiz").forEach(b => b.onclick = () => {
+        const course = COURSES.find(c => c.id === b.dataset.id);
+        if (course) showQuiz(student, course);
+    });
+    document.getElementById("logoutBtn").onclick = () => doLogout("You have been logged out.");
+    if (allCompleted) {
+        document.getElementById("getCertBtn").onclick = () => showCertificate(student);
+    }
+}
+
+function showCertificate(student) {
+    const date = new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
+    const certId = "SLMS-" + student.id.toUpperCase().slice(0,8) + "-" + Date.now().toString(36).toUpperCase();
+
+    const overlay = document.createElement("div");
+    overlay.className = "cert-overlay";
+    overlay.id = "certOverlay";
+    overlay.innerHTML = `
+        <div class="cert-modal">
+            <canvas id="certCanvas" width="760" height="540" style="width:100%;border-radius:12px;display:block;"></canvas>
+            <div class="cert-actions">
+                <button class="btn-download" id="btnDlCert"><i class="fas fa-download"></i> Download Certificate</button>
+                <button class="btn-close-cert" id="btnCloseCert"><i class="fas fa-times"></i> Close</button>
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+
+    // Draw certificate on canvas
+    const canvas = document.getElementById("certCanvas");
+    const ctx    = canvas.getContext("2d");
+    const W = 760, H = 540;
+
+    // Background
+    const bgGrad = ctx.createLinearGradient(0, 0, W, H);
+    bgGrad.addColorStop(0,   "#0a1628");
+    bgGrad.addColorStop(0.5, "#0f2a1a");
+    bgGrad.addColorStop(1,   "#0a1628");
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Outer border
+    ctx.strokeStyle = "#22c55e";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(18, 18, W-36, H-36);
+
+    // Inner border
+    ctx.strokeStyle = "rgba(34,197,94,0.3)";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(28, 28, W-56, H-56);
+
+    // Corner decorations
+    const corners = [[38,38],[W-38,38],[38,H-38],[W-38,H-38]];
+    corners.forEach(([x,y]) => {
+        ctx.beginPath();
+        ctx.arc(x, y, 10, 0, Math.PI*2);
+        ctx.fillStyle = "#22c55e";
+        ctx.fill();
+    });
+
+    // Top decorative line
+    ctx.fillStyle = "rgba(34,197,94,0.15)";
+    ctx.fillRect(38, 55, W-76, 1);
+    ctx.fillRect(38, H-56, W-76, 1);
+
+    // Shield icon area (drawn as polygon)
+    ctx.save();
+    ctx.translate(W/2, 95);
+    ctx.beginPath();
+    ctx.moveTo(0, -30); ctx.lineTo(26, -18); ctx.lineTo(26, 5);
+    ctx.quadraticCurveTo(26, 22, 0, 32);
+    ctx.quadraticCurveTo(-26, 22, -26, 5);
+    ctx.lineTo(-26, -18); ctx.closePath();
+    const shieldGrad = ctx.createLinearGradient(0,-30,0,32);
+    shieldGrad.addColorStop(0, "#22c55e");
+    shieldGrad.addColorStop(1, "#16a34a");
+    ctx.fillStyle = shieldGrad;
+    ctx.fill();
+    ctx.strokeStyle = "#4ade80";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    // Checkmark
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(-10, 2); ctx.lineTo(-2, 10); ctx.lineTo(12, -8);
+    ctx.stroke();
+    ctx.restore();
+
+    // "CERTIFICATE OF COMPLETION"
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#22c55e";
+    ctx.font = "bold 13px 'Arial'";
+    ctx.letterSpacing = "4px";
+    ctx.fillText("CERTIFICATE OF COMPLETION", W/2, 158);
+
+    // Decorative divider
+    ctx.fillStyle = "rgba(34,197,94,0.4)";
+    ctx.fillRect(W/2 - 120, 168, 240, 1);
+
+    // "This is to certify that"
+    ctx.fillStyle = "rgba(148,163,184,0.9)";
+    ctx.font = "italic 15px Georgia, serif";
+    ctx.fillText("This is to certify that", W/2, 200);
+
+    // Student name
+    const nameGrad = ctx.createLinearGradient(W/2-150, 0, W/2+150, 0);
+    nameGrad.addColorStop(0, "#4ade80");
+    nameGrad.addColorStop(0.5, "#22c55e");
+    nameGrad.addColorStop(1, "#4ade80");
+    ctx.fillStyle = nameGrad;
+    ctx.font = "bold 36px Georgia, serif";
+    ctx.fillText(student.name, W/2, 242);
+
+    // Underline name
+    const nameW = ctx.measureText(student.name).width;
+    ctx.fillStyle = "rgba(34,197,94,0.5)";
+    ctx.fillRect(W/2 - nameW/2, 250, nameW, 1.5);
+
+    // "has successfully completed all courses"
+    ctx.fillStyle = "rgba(148,163,184,0.9)";
+    ctx.font = "italic 15px Georgia, serif";
+    ctx.fillText("has successfully completed all", W/2, 278);
+    ctx.fillStyle = "#f1f5f9";
+    ctx.font = "bold 15px Georgia, serif";
+    ctx.fillText("6 Cybersecurity Courses", W/2, 298);
+    ctx.fillStyle = "rgba(148,163,184,0.9)";
+    ctx.font = "italic 15px Georgia, serif";
+    ctx.fillText("in the SecureLMS Professional Program", W/2, 318);
+
+    // Divider
+    ctx.fillStyle = "rgba(34,197,94,0.25)";
+    ctx.fillRect(W/2 - 200, 336, 400, 1);
+
+    // Bottom info row
+    // Date
+    ctx.textAlign = "left";
+    ctx.fillStyle = "rgba(148,163,184,0.7)";
+    ctx.font = "11px Arial";
+    ctx.fillText("DATE OF ISSUE", 80, 365);
+    ctx.fillStyle = "#f1f5f9";
+    ctx.font = "bold 13px Arial";
+    ctx.fillText(date, 80, 382);
+
+    // Cert ID
+    ctx.textAlign = "center";
+    ctx.fillStyle = "rgba(148,163,184,0.7)";
+    ctx.font = "11px Arial";
+    ctx.fillText("CERTIFICATE ID", W/2, 365);
+    ctx.fillStyle = "#22c55e";
+    ctx.font = "bold 11px 'Courier New'";
+    ctx.fillText(certId, W/2, 382);
+
+    // Issuer
+    ctx.textAlign = "right";
+    ctx.fillStyle = "rgba(148,163,184,0.7)";
+    ctx.font = "11px Arial";
+    ctx.fillText("ISSUED BY", W-80, 365);
+    ctx.fillStyle = "#f1f5f9";
+    ctx.font = "bold 13px Arial";
+    ctx.fillText("ALI HAMZA", W-80, 382);
+
+    // Signature line
+    ctx.textAlign = "right";
+    ctx.fillStyle = "rgba(34,197,94,0.4)";
+    ctx.fillRect(W-200, 408, 120, 1);
+    ctx.fillStyle = "rgba(148,163,184,0.6)";
+    ctx.font = "italic 12px Georgia";
+    ctx.fillText("ALI HAMZA, SecureLMS", W-80, 424);
+    ctx.font = "10px Arial";
+    ctx.fillText("Program Director", W-80, 438);
+
+    // Stars decoration
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#22c55e";
+    ctx.font = "14px Arial";
+    ctx.fillText("★ ★ ★ ★ ★ ★", W/2, 470);
+
+    // Bottom text
+    ctx.fillStyle = "rgba(148,163,184,0.4)";
+    ctx.font = "10px Arial";
+    ctx.fillText("SecureLMS · Cybersecurity Education Platform · securelms.com", W/2, 500);
+
+    // Download handler
+    document.getElementById("btnDlCert").onclick = () => {
+        const link = document.createElement("a");
+        link.download = `SecureLMS_Certificate_${student.name.replace(/\s+/g,"_")}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+    };
+
+    document.getElementById("btnCloseCert").onclick = () => overlay.remove();
+    overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+}
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+render();
+
+// Validate cookie on load
+(function validateCookieOnLoad() {
+    const cookie = getCookie();
+    const sess   = getSession();
+    if (!cookie && sess?.isLoggedIn) doLogout("Security: session cookie missing. Please log in again.");
+})();
+</script>
+
+<script>
+// ── PARTICLE CANVAS BACKGROUND ──
+(function() {
+    const canvas = document.getElementById("bgCanvas");
+    const ctx    = canvas.getContext("2d");
+    let W, H, particles = [], lines = [];
+
+    const COLORS = ["#22c55e","#16a34a","#4ade80","#0ea5e9","#a855f7"];
+
+    function resize() {
+        W = canvas.width  = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resize);
+    resize();
+
+    // Create particles
+    for (let i = 0; i < 90; i++) {
+        particles.push({
+            x:    Math.random() * W,
+            y:    Math.random() * H,
+            r:    Math.random() * 1.8 + 0.4,
+            vx:   (Math.random() - 0.5) * 0.4,
+            vy:   (Math.random() - 0.5) * 0.4,
+            color: COLORS[Math.floor(Math.random() * COLORS.length)],
+            alpha: Math.random() * 0.6 + 0.2,
+            pulse: Math.random() * Math.PI * 2,
+            pulseSpeed: 0.02 + Math.random() * 0.02
+        });
+    }
+
+    // Mouse influence
+    let mouse = { x: W/2, y: H/2 };
+    document.addEventListener("mousemove", e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+
+    function draw() {
+        ctx.clearRect(0, 0, W, H);
+
+        // Update & draw particles
+        particles.forEach(p => {
+            // Slight mouse attraction
+            const dx = mouse.x - p.x, dy = mouse.y - p.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist < 200) {
+                p.vx += dx / dist * 0.008;
+                p.vy += dy / dist * 0.008;
+            }
+
+            // Speed cap
+            const speed = Math.sqrt(p.vx*p.vx + p.vy*p.vy);
+            if (speed > 1.2) { p.vx *= 0.95; p.vy *= 0.95; }
+
+            p.x += p.vx; p.y += p.vy;
+            p.pulse += p.pulseSpeed;
+
+            // Wrap
+            if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+            if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+
+
+            const a = p.alpha * (0.7 + 0.3 * Math.sin(p.pulse));
+            const drawR = Math.max(0.1, p.r + Math.sin(p.pulse) * 0.5);
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, drawR, 0, Math.PI * 2);
+            ctx.fillStyle = p.color + Math.floor(a * 255).toString(16).padStart(2,"0");
+            ctx.fill();
+
+            // Glow
+            const glowR = Math.max(0.1, p.r * 3);
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, glowR, 0, Math.PI * 2);
+            const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, glowR);
+            grad.addColorStop(0, p.color + "22");
+            grad.addColorStop(1, "transparent");
+            ctx.fillStyle = grad;
+            ctx.fill();
+        });
+
+        // Draw connecting lines
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i+1; j < particles.length; j++) {
+                const a = particles[i], b = particles[j];
+                const dx = a.x - b.x, dy = a.y - b.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < 120) {
+                    const alpha = (1 - dist/120) * 0.15;
+                    ctx.beginPath();
+                    ctx.moveTo(a.x, a.y);
+                    ctx.lineTo(b.x, b.y);
+                    ctx.strokeStyle = `rgba(34,197,94,${alpha})`;
+                    ctx.lineWidth = 0.5;
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // Floating code chars (matrix rain lite)
+        ctx.font = "11px monospace";
+        ctx.fillStyle = "rgba(34,197,94,0.07)";
+        if (!window._matrixChars) {
+            window._matrixChars = Array.from({length: 30}, () => ({
+                x: Math.random() * W,
+                y: Math.random() * H,
+                char: "",
+                timer: 0,
+                speed: 0.3 + Math.random() * 0.5
+            }));
+        }
+        const chars = "01アイウエオカキクケコABCDEF{}[]<>/\\|#@!";
+        window._matrixChars.forEach(c => {
+            c.timer++;
+            if (c.timer % 30 === 0) c.char = chars[Math.floor(Math.random() * chars.length)];
+            c.y += c.speed;
+            if (c.y > H) { c.y = 0; c.x = Math.random() * W; }
+            if (c.char) ctx.fillText(c.char, c.x, c.y);
+        });
+
+        requestAnimationFrame(draw);
+    }
+    draw();
+})();
+</script>
+</body>
+</html>
